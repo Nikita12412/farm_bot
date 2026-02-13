@@ -11,5 +11,4 @@ dp = Dispatcher()
 async def start(message:types.Message):
     await message.answer("Привет")
 
-
 asyncio.run(dp.start_polling(bot))
