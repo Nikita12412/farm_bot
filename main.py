@@ -11,4 +11,15 @@ dp = Dispatcher()
 async def start(message:types.Message):
     await message.answer("Приветствую вас, хозяин фермы! 🏡\nВы попали в симулятор фермерской жизни. У вас есть участок земли, стартовый капитал и море возможностей.\nЧто доступно:\n🔸 посадка культур и сбор урожая;\n🔸 улучшение фермы;\n🔸 торговля на рынке.\nИспользуйте меню ниже, чтобы начать своё приключение!")
 
+@dp.message(Command("menu"))
+async def menu(message:types.Message):
+    farmbutton = types.InlineKeyboardButton(text = "Ферма",callback_data="open_farm_menu")
+    avtoparkbutton = types.InlineKeyboardButton(text = "Автопарк",callback_data="open_avtopark_menu")
+    shopbutton = types.InlineKeyboardButton(text = "Магазин",callback_data="open_shop_menu")
+    marketbutton = types.InlineKeyboardButton(text = "Рынок",callback_data="open_market_menu")
+    row1 = [farmbutton,avtoparkbutton]
+    row2 = [shopbutton,marketbutton]
+    keyboard = types.InlineKeyboardMarkup(inline_keyboard=[row1,row2])
+    await message.answer("меню",reply_markup=keyboard)
+
 asyncio.run(dp.start_polling(bot))
