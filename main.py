@@ -22,4 +22,19 @@ async def menu(message:types.Message):
     keyboard = types.InlineKeyboardMarkup(inline_keyboard=[row1,row2])
     await message.answer("меню",reply_markup=keyboard)
 
+@dp.callback_query(F.data == "open_farm_menu")
+async def open_farm_menu(callback:types.CallbackQuery):
+    farm_info = "информация о ферме"
+    harvestbutton = types.InlineKeyboardButton(text = "Собрать урожай",callback_data = "...")
+    exportcropsbutton = types.InlineKeyboardButton(text = "Вывезти урожай",callback_data = "...")
+    planplantsbutton = types.InlineKeyboardButton(text = "Посадить урожай",callback_data = "...")
+    keybord = types.InlineKeyboardMarkup()
+
+@dp.callback_query(F.data == "open_avtopark_menu")
+async def open_avtopark_menu(callback:types.CallbackQuery):
+    avtopark_info = "информация о автопарке"
+    
+
+
+
 asyncio.run(dp.start_polling(bot))
