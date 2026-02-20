@@ -33,8 +33,11 @@ async def open_farm_menu(callback:types.CallbackQuery):
 @dp.callback_query(F.data == "open_avtopark_menu")
 async def open_avtopark_menu(callback:types.CallbackQuery):
     avtopark_info = "информация о автопарке"
-    
+    keybord = types.InlineKeyboardMarkup()
 
-
+@dp.callback_query(F.data == "open_shop_menu")
+async def open_shop_menu(callback:types.CallbackQuery):
+    avtopark_info = "информация о магазине"
+    keybord = types.InlineKeyboardMarkup()
 
 asyncio.run(dp.start_polling(bot))
