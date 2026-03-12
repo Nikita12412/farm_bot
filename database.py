@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import create_async_engine,async_sessionmaker,AsyncSession
-from sqlalchemy.orm import DeclarativeBase,mapped_column
+from sqlalchemy.orm import DeclarativeBase,mapped_column,Mapped
 from sqlalchemy import Integer,Float,Text,String,DateTime,Boolean
+from datetime import datetime
 
 DATABASE_URL = "postgresql+asyncpg://postgres:1234@localhost:5432/farm"
 engine = create_async_engine(DATABASE_URL,echo = True)
@@ -13,12 +14,31 @@ async def get_session():
 class Base(DeclarativeBase):
     pass
 
-class Plants(Base):
+class Plant(Base):
     __tablename__ = "plants"
-    id = mapped_column(primary_key=True)
-    player_id = mapped_column(Integer)
-    planting_datetime = mapped_column(DateTime)
-    is_grown = mapped_column(Boolean)
+    id:Mapped[int] = mapped_column(primary_key=True)
+    player_id:Mapped[int] = mapped_column(Integer)
+    planting_datetime:Mapped[datetime] = mapped_column(DateTime)
+    is_grown:Mapped[bool] = mapped_column(Boolean)
+    harvest:Mapped[float] = mapped_column(Float)
+
+class User(Base):
+    __tablename__ = "users"
+    id:Mapped[int] = mapped_column(primary_key=True)
+    telegram_id:Mapped[int] = mapped_column(Integer,unique=True)
+    balance:Mapped[float] = mapped_column(Float)
+
+async def add_user(telegram_id):
+    async with session_local() as session:
+        user = User(telegram_id = telegram_id,balance = 0)
+        session.add(user)
+        await session.commit()
+
+async def add_plant(telegram_id,harvest):
+    async with session_local() as session:
+        plant = Plant(player_id = telegram_id,planting_datetime = datetime.now(),is_grown = False,harvest = harvest)
+        session.add(plant)
+        await session.commit()
 
 async def create_tables():
     async with engine.begin() as con:
