@@ -15,3 +15,8 @@ class PlantInstance:
         self.template = template
         self.player_id = player_id
         self.planting_datetime = datetime.datetime.now()
+
+plants_info = {
+    "помидор":PlantTemplate("помидор",2,1,150,50),
+    "яблоко":PlantTemplate("яблоко",3,2,300,140)
+}

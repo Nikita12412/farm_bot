@@ -4,32 +4,29 @@ from aiogram.filters import Command,CommandObject
 from aiogram.filters.callback_data import CallbackData
 import asyncio
 from database import engine,create_tables,add_plant,add_user
-from plantsmodels import PlantTemplate
+from plantsmodels import PlantTemplate,plants_info
 
 apitoken = '8557827638:AAG21pzqTqu6FCOiAYBRqi9Q8eDSbCraV1c'
 bot = Bot(apitoken)
 dp = Dispatcher()
-asyncio.run(create_tables( ))
+
 
 class PlantaPlantCalback(CallbackData,prefix = "plant"):
     telegram_id:int
     plant:str
 
-plants = {
-    "помидор":PlantTemplate("помидор",2,1,150,50),
-    "яблоко":PlantTemplate("яблоко",3,2,300,140)
-}
-
 @dp.callback_query(PlantaPlantCalback.filter())
 async def proces_plant(callback:types.CallbackQuery,callback_data:PlantaPlantCalback):
-    harvest = plants[callback_data.plant].base_yield
+    harvest = plants_info[callback_data.plant].base_yield
     await add_plant(callback.from_user.id,harvest)
     await callback.message.answer(f"вы посадили {callback_data.plant}")
 
 @dp.message(Command('start'))
 async def start(message:types.Message):
-    await add_user(telegram_id= message.from_user.id)
-    await message.answer("Приветствую вас, хозяин фермы! 🏡\nВы попали в симулятор фермерской жизни. У вас есть участок земли, стартовый капитал и море возможностей.\nЧто доступно:\n🔸 посадка культур и сбор урожая;\n🔸 улучшение фермы;\n🔸 торговля на рынке.\nИспользуйте меню ниже, чтобы начать своё приключение!")
+    if await add_user(telegram_id= message.from_user.id):
+        await message.answer("Приветствую вас, хозяин фермы! 🏡\nВы попали в симулятор фермерской жизни. У вас есть участок земли, стартовый капитал и море возможностей.\nЧто доступно:\n🔸 посадка культур и сбор урожая;\n🔸 улучшение фермы;\n🔸 торговля на рынке.\nИспользуйте меню ниже, чтобы начать своё приключение!")
+    else:
+        await message.answer("Снова приветствую вас, хозяин фермы! 🏡\nВы попали в симулятор фермерской жизни. У вас есть участок земли, стартовый капитал и море возможностей.\nЧто доступно:\n🔸 посадка культур и сбор урожая;\n🔸 улучшение фермы;\n🔸 торговля на рынке.\nИспользуйте меню ниже, чтобы начать своё приключение!")
 
 @dp.message(Command("menu"))
 async def menu(message:types.Message):
@@ -46,7 +43,7 @@ async def menu(message:types.Message):
 @dp.callback_query(F.data == "open_farm_menu")
 async def open_farm_menu(callback:types.CallbackQuery):
     farm_info = "информация о ферме"
-    harvestbutton = types.InlineKeyboardButton(text = "Собрать урожай",callback_data = "...")
+    harvestbutton = types.InlineKeyboardButton(text = "Собрать урожай",callback_data = "crop_harvest")
     exportcropsbutton = types.InlineKeyboardButton(text = "Вывезти урожай",callback_data = "...")
     planplantsbutton = types.InlineKeyboardButton(text = "Посадить семена",callback_data = "plant_seeds")
     buynewfarmbuton = types.InlineKeyboardButton(text = "Купить новую ферму",callback_data = "...")
@@ -54,6 +51,10 @@ async def open_farm_menu(callback:types.CallbackQuery):
     row2 = [planplantsbutton,buynewfarmbuton]
     keyboard = types.InlineKeyboardMarkup(inline_keyboard=[row1,row2])
     await callback.message.answer(farm_info,reply_markup = keyboard)
+
+@dp.callback_query(F.data == "crop_harvest")
+async def crop_harvest(callback:types.CallbackQuery):
+    await callback.message.answer("Вы собрали урожай")
 
 @dp.callback_query(F.data == "plant_seeds")
 async def plant_seeds(callback:types.CallbackQuery):
@@ -105,4 +106,8 @@ async def open_market_menu(callback:types.CallbackQuery):
 async def sell_harvest(callback:types.CallbackQuery):
     await callback.message.answer("Вы продали урожай")
 
-asyncio.run(dp.start_polling(bot))
+async def main():
+    await create_tables()
+    await dp.start_polling(bot)
+
+asyncio.run(main()) 

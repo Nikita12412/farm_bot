@@ -1,10 +1,10 @@
 from sqlalchemy.ext.asyncio import create_async_engine,async_sessionmaker,AsyncSession
 from sqlalchemy.orm import DeclarativeBase,mapped_column,Mapped
-from sqlalchemy import Integer,Float,Text,String,DateTime,Boolean
+from sqlalchemy import Integer,Float,Text,String,DateTime,Boolean,select
 from datetime import datetime
 
 DATABASE_URL = "postgresql+asyncpg://postgres:1234@localhost:5432/farm"
-engine = create_async_engine(DATABASE_URL,echo = True)
+engine = create_async_engine(DATABASE_URL)
 session_local = async_sessionmaker(engine,expire_on_commit=True)
 
 async def get_session():
@@ -30,9 +30,13 @@ class User(Base):
 
 async def add_user(telegram_id):
     async with session_local() as session:
-        user = User(telegram_id = telegram_id,balance = 0)
-        session.add(user)
-        await session.commit()
+        try:
+            user = User(telegram_id = telegram_id,balance = 0)
+            session.add(user)
+            await session.commit()
+            return True
+        except:
+            return False
 
 async def add_plant(telegram_id,harvest):
     async with session_local() as session:
@@ -43,3 +47,9 @@ async def add_plant(telegram_id,harvest):
 async def create_tables():
     async with engine.begin() as con:
         await con.run_sync(Base.metadata.create_all)
+
+async def get_plants():
+    async with session_local() as session:
+        query = select(Plant)
+        plants:list[Plant] = (await session.execute(query)).all()
+        return plants
