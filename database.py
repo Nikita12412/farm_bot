@@ -40,7 +40,7 @@ async def add_user(telegram_id):
 
 async def add_plant(telegram_id,harvest,grows_time):
     async with session_local() as session:
-        plant = Plant(player_id = telegram_id,planting_datetime = datetime.now() + timedelta(minutes = grows_time),is_grown = False,harvest = harvest)
+        plant = Plant(player_id = telegram_id,planting_datetime = datetime.now() + timedelta(hours = grows_time),is_grown = False,harvest = harvest)
         session.add(plant)
         await session.commit()
 
@@ -51,10 +51,11 @@ async def create_tables():
 async def get_plants():
     async with session_local() as session:
         query = select(Plant)
-        plants:list[Plant] = (await session.execute(query)).all()
+        plants:list[Plant] = (await session.execute(query)).scalars().all()
         return plants
 
 async def mark_plant_as_grown(plant:Plant):
     async with session_local() as session:
+        plant = await session.get(Plant,plant.id)
         plant.is_grown = True
         await session.commit()

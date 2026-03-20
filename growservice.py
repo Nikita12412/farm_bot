@@ -6,13 +6,14 @@ import time
 
 async def grow_procces():
     while True:
-        time.sleep(5)
+        await asyncio.sleep(3600)
         plants = await get_plants()
         current_time = datetime.now()
         print(plants)
         print("растения обновлены")
         for plant in plants:
             print(plant.planting_datetime,current_time)
+            print("проходимся по растениям")
             if plant.planting_datetime <= current_time:
                 print("Растение выросло")
                 await mark_plant_as_grown(plant)
