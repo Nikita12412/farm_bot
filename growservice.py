@@ -1,11 +1,18 @@
 import asyncio
-from database import get_plants
-import datetime
+from database import get_plants,mark_plant_as_grown
+from datetime import datetime,timedelta
 from plantsmodels import plants_info
+import time
 
 async def grow_procces():
-    await asyncio.sleep(5)
-    plants = await get_plants()
-    for plant in plants:
-        grows_time = plants_info[plant.]
-        if plant.planting_datetime
+    while True:
+        time.sleep(5)
+        plants = await get_plants()
+        current_time = datetime.now()
+        print(plants)
+        print("растения обновлены")
+        for plant in plants:
+            print(plant.planting_datetime,current_time)
+            if plant.planting_datetime <= current_time:
+                print("Растение выросло")
+                await mark_plant_as_grown(plant)

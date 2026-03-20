@@ -5,6 +5,7 @@ from aiogram.filters.callback_data import CallbackData
 import asyncio
 from database import engine,create_tables,add_plant,add_user
 from plantsmodels import PlantTemplate,plants_info
+from growservice import grow_procces
 
 apitoken = '8557827638:AAG21pzqTqu6FCOiAYBRqi9Q8eDSbCraV1c'
 bot = Bot(apitoken)
@@ -18,7 +19,8 @@ class PlantaPlantCalback(CallbackData,prefix = "plant"):
 @dp.callback_query(PlantaPlantCalback.filter())
 async def proces_plant(callback:types.CallbackQuery,callback_data:PlantaPlantCalback):
     harvest = plants_info[callback_data.plant].base_yield
-    await add_plant(callback.from_user.id,harvest)
+    grows_time = plants_info[callback_data.plant].growth_time
+    await add_plant(callback.from_user.id,harvest,grows_time)
     await callback.message.answer(f"вы посадили {callback_data.plant}")
 
 @dp.message(Command('start'))
@@ -108,6 +110,7 @@ async def sell_harvest(callback:types.CallbackQuery):
 
 async def main():
     await create_tables()
+    grow_task = asyncio.create_task(grow_procces())
     await dp.start_polling(bot)
 
 asyncio.run(main()) 
