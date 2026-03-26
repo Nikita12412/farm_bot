@@ -3,7 +3,7 @@ from aiogram import F
 from aiogram.filters import Command,CommandObject
 from aiogram.filters.callback_data import CallbackData
 import asyncio
-from database import engine,create_tables,add_plant,add_user
+from database import engine,create_tables,add_plant,add_user,harvest_crop
 from plantsmodels import PlantTemplate,plants_info
 from growservice import grow_procces
 
@@ -20,7 +20,7 @@ class PlantaPlantCalback(CallbackData,prefix = "plant"):
 async def proces_plant(callback:types.CallbackQuery,callback_data:PlantaPlantCalback):
     harvest = plants_info[callback_data.plant].base_yield
     grows_time = plants_info[callback_data.plant].growth_time
-    await add_plant(callback.from_user.id,harvest,grows_time)
+    await add_plant(callback.from_user.id,harvest,grows_time,callback_data.plant)
     await callback.message.answer(f"вы посадили {callback_data.plant}")
 
 @dp.message(Command('start'))
@@ -56,7 +56,8 @@ async def open_farm_menu(callback:types.CallbackQuery):
 
 @dp.callback_query(F.data == "crop_harvest")
 async def crop_harvest(callback:types.CallbackQuery):
-    await callback.message.answer("Вы собрали урожай")
+    plants = await harvest_crop(callback.from_user.id)
+    await callback.message.answer(f"Вы собрали {plants}")
 
 @dp.callback_query(F.data == "plant_seeds")
 async def plant_seeds(callback:types.CallbackQuery):

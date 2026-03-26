@@ -14,6 +14,13 @@ async def get_session():
 class Base(DeclarativeBase):
     pass
 
+class Storage(Base):
+    __tablename__ = "storage"
+    id:Mapped[int] = mapped_column(primary_key=True)
+    player_id:Mapped[int] = mapped_column(Integer)
+    plant_name:Mapped[str] = mapped_column(String)
+    amount:Mapped[float] = mapped_column(Float)
+
 class Plant(Base):
     __tablename__ = "plants"
     id:Mapped[int] = mapped_column(primary_key=True)
@@ -21,6 +28,7 @@ class Plant(Base):
     planting_datetime:Mapped[datetime] = mapped_column(DateTime)
     is_grown:Mapped[bool] = mapped_column(Boolean)
     harvest:Mapped[float] = mapped_column(Float)
+    plant_name:Mapped[str] = mapped_column(String)
 
 class User(Base):
     __tablename__ = "users"
@@ -38,9 +46,9 @@ async def add_user(telegram_id):
         except:
             return False
 
-async def add_plant(telegram_id,harvest,grows_time):
+async def add_plant(telegram_id,harvest,grows_time,plant_name):
     async with session_local() as session:
-        plant = Plant(player_id = telegram_id,planting_datetime = datetime.now() + timedelta(hours = grows_time),is_grown = False,harvest = harvest)
+        plant = Plant(player_id = telegram_id,planting_datetime = datetime.now() + timedelta(hours = grows_time),is_grown = False,harvest = harvest,plant_name = plant_name)
         session.add(plant)
         await session.commit()
 
@@ -58,4 +66,42 @@ async def mark_plant_as_grown(plant:Plant):
     async with session_local() as session:
         plant = await session.get(Plant,plant.id)
         plant.is_grown = True
+        await session.commit()
+
+async def get_grown_plants_by_player(telegram_id):
+    async with session_local() as session:
+        query = select(Plant).where(Plant.player_id == telegram_id,Plant.is_grown == True)
+        plants:list[Plant] = (await session.execute(query)).scalars().all()
+        return plants
+    
+async def delete_plants(plants_ids:list[int]):
+    async with session_local() as session:
+        for plant_id in plants_ids:
+            plant = await session.get(Plant,plant_id)
+            await session.delete(plant)
+        await session.commit()
+
+async def harvest_crop(telegram_id):
+    plants = await get_grown_plants_by_player(telegram_id)
+    plants_ids = []
+    harvested_plants = {}
+    for plant in plants:
+        if not plant.plant_name in harvested_plants:
+            harvested_plants[plant.plant_name] = 0
+        harvested_plants[plant.plant_name] += plant.harvest
+        plants_ids.append(plant.id)
+    await delete_plants(plants_ids)
+    for plant_name,amount in harvested_plants.items():
+        await add_harvested_plant(telegram_id,plant_name,amount)
+    return harvested_plants
+
+async def add_harvested_plant(telegram_id,plant_name,amount):
+    async with session_local() as session:
+        storage_query = select(Storage).where(Storage.player_id == telegram_id,Storage.plant_name == plant_name)
+        storage_item = (await session.execute(storage_query)).scalar_one_or_none()
+        if storage_item:
+            storage_item.amount += amount
+        else:
+            storage_item = Storage(player_id = telegram_id,plant_name = plant_name,amount = amount)
+            session.add(storage_item)
         await session.commit()
